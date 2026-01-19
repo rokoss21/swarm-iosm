@@ -62,7 +62,7 @@ git clone https://github.com/rokoss21/swarm-iosm.git ~/.claude/skills/swarm-iosm
 
 ---
 
-## 🛠️ Usage
+## 🛠️ Usage Workflow
 
 ### 1. Initialize Context
 Setup the IOSM structure in your project:
@@ -94,18 +94,124 @@ Watch the live dashboard.
 /swarm-iosm watch
 ```
 
+### 6. Integrate
+Merge work and run quality gates.
+```bash
+/swarm-iosm integrate
+```
+
+---
+
+## 💻 Commands Reference
+
+### `/swarm-iosm setup`
+Initialize project context for Swarm workflow. Creates `swarm/` directory structure.
+
+### `/swarm-iosm new-track "<description>"`
+Create a new feature/task track with PRD and implementation plan.
+
+### `/swarm-iosm implement [track-id]`
+Execute the implementation plan using parallel subagents. Launches background workers.
+
+### `/swarm-iosm status [track-id]`
+Show progress summary, blockers, and completion status.
+
+### `/swarm-iosm watch [track-id]`
+**Live Monitoring (v1.3):** Real-time ASCII dashboard with velocity and ETA.
+
+### `/swarm-iosm simulate [track-id]`
+**Dry-Run (v1.3):** Simulates execution with virtual time to identify bottlenecks.
+
+### `/swarm-iosm resume [track-id]`
+**Recovery (v1.3):** Resume an interrupted implementation from the latest checkpoint.
+
+### `/swarm-iosm retry <task-id>`
+**Smart Retry (v1.2):** Retry a failed task with optional mode changes (foreground/background).
+
+### `/swarm-iosm integrate <track-id>`
+Collect subagent reports, resolve conflicts, and run IOSM quality gates.
+
+---
+
+## 🤖 Subagent Roles
+
+The Skill defines standard subagent roles optimized for specific tasks:
+
+| Role | Purpose | Tools | Use When |
+|------|---------|-------|----------|
+| **Explorer** | Analyze existing codebase (brownfield) | Read, Grep, Glob | Working with existing code |
+| **Architect** | Design decisions and contracts | Read, Write (docs) | Complex features requiring design |
+| **Implementer** | Parallel implementation | Read, Write, Edit, Bash | Independent modules |
+| **TestRunner** | Verification and testing | Read, Bash, Write | After implementation |
+| **SecurityAuditor** | Security review | Read, Grep, Bash | Auth, payments, sensitive data |
+| **PerfAnalyzer** | Performance testing | Read, Bash (profiling) | High-traffic features, APIs |
+| **DocsWriter** | Documentation | Read, Write, Edit | Public APIs, complex features |
+
 ---
 
 ## 🚦 IOSM Quality Gates
 
 Every track is evaluated against strict criteria before integration:
 
-| Gate | Focus | Criteria |
-|------|-------|----------|
-| **Gate-I** | **Improve** | Semantic clarity ≥ 0.95, No duplication |
-| **Gate-O** | **Optimize** | P95 Latency defined, Tests passing |
-| **Gate-S** | **Shrink** | API surface minimized, Deps reduced |
-| **Gate-M** | **Modularize** | Clean contracts, No circular deps |
+### Gate-I: Improve (Code Quality)
+- ✅ Semantic clarity ≥ 0.95 (clear naming)
+- ✅ Code duplication ≤ 5%
+- ✅ Invariants documented (100% public APIs)
+
+### Gate-O: Optimize (Performance)
+- ✅ P50/P95/P99 latency measured
+- ✅ Error budget defined
+- ✅ Chaos tests passing
+
+### Gate-S: Shrink (Minimal Surface)
+- ✅ API surface reduced ≥ 20% (or justified)
+- ✅ Dependency count stable/reduced
+- ✅ Onboarding time ≤ 15 min
+
+### Gate-M: Modularize (Clean Boundaries)
+- ✅ Module contracts 100% defined
+- ✅ Change surface ≤ 20% (localized)
+- ✅ No circular dependencies
+
+---
+
+## 📂 File Structure
+
+```
+.claude/skills/swarm-iosm/     # Skill definition
+  SKILL.md                      # Main Skill file
+  templates/                    # Document templates (PRD, Plan, Reports)
+  scripts/                      # Logic scripts (Planner, Validation, Metrics)
+
+swarm/                          # Project workflow data (auto-created)
+  tracks/                       # Feature/task tracks
+    YYYY-MM-DD-NNN/            # Track directory
+      plan.md                  # Implementation plan
+      iosm_state.md            # Live state (Auto-generated)
+      reports/                 # Subagent reports
+      checkpoints/             # JSON State snapshots
+      integration_report.md    # Final results
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Background task fails silently?**
+- Check `/bashes` for status.
+- Use `/swarm-iosm retry <TID> --foreground` to debug interactively.
+
+**"Loops without progress"?**
+- Check `iosm_state.md` for blocking questions.
+- Ensure dependencies in `plan.md` don't form a cycle.
+
+**Permission Denied errors?**
+- The system now auto-diagnoses this. Use the suggested fix (e.g., `chmod`) and retry.
+
+**Script not found?**
+- Ensure you are running from the project root.
 
 ---
 
@@ -124,10 +230,14 @@ This project is open-source. If you want to contribute to the IOSM methodology o
 
 ---
 
-### Version History
+## 📜 Version History
 
 - **v2.1 (2026-01-19):** Automated State Engine, Status Sync CLI.
 - **v2.0 (2026-01-19):** Inter-Agent Comm, Anti-Patterns, Visualization.
 - **v1.3 (2026-01-19):** Simulation, Checkpointing, Live Monitoring.
 - **v1.2 (2026-01-19):** Concurrency Limits, Cost Tracking, Error Diagnosis.
 - **v1.0 (2026-01-17):** Initial Release.
+
+---
+
+**Happy Swarming! 🐝**
