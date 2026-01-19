@@ -1,0 +1,23 @@
+graph TD
+    classDef done fill:#d4edda,stroke:#28a745,color:black;
+    classDef running fill:#fff3cd,stroke:#ffc107,color:black;
+    classDef blocked fill:#f8d7da,stroke:#dc3545,color:black;
+    classDef todo fill:#f8f9fa,stroke:#6c757d,color:black;
+    classDef critical stroke:#000,stroke-width:3px;
+    T01("T01<br/>Analyze current API performance<br/>(S (1 hour))"):::done
+    class T01 critical
+    T02("T02<br/>Design caching strategy<br/>(M (2 hours))"):::done
+    class T02 critical
+    T03("T03<br/>Implement cache service<br/>(M (3 hours))"):::running
+    class T03 critical
+    T04("T04<br/>Add caching to /api/natal endpoint<br/>(M (2 hours))"):::todo
+    class T04 critical
+    T05("T05<br/>Add caching to /api/transits endpoint<br/>(M (2 hours))"):::todo
+    T06("T06<br/>Integration testing<br/>(M (2 hours))"):::todo
+    class T06 critical
+    T01 --> T02
+    T02 --> T03
+    T03 --> T04
+    T03 --> T05
+    T04 --> T06
+    T05 --> T06

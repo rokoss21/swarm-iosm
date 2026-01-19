@@ -70,8 +70,10 @@ git clone https://github.com/rokoss21/swarm-iosm.git .claude/skills/swarm-iosm
 - `swarm/tracks/<id>/PRD.md` — Requirements document
 - `swarm/tracks/<id>/plan.md` — Task breakdown with dependencies
 - `swarm/tracks/<id>/reports/` — Subagent execution reports (after `/swarm-iosm implement`)
+- `swarm/tracks/<id>/integration_report.md` — Merge plan & results
+- `swarm/tracks/<id>/iosm_report.md` — Quality gate evaluation
 
-**See full example:** [`examples/demo-track/`](examples/demo-track/)
+**See complete example:** [`examples/demo-track/`](examples/demo-track/) — Full track from PRD to merge (7 tasks, Redis caching feature)
 
 ---
 

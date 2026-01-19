@@ -2,9 +2,19 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
-reports/
-checkpoints/
-simulation_report.md
-continuous_dispatch_plan.md
-iosm_state.md
-dependency_graph.mermaid
+
+# Ignore generated files in swarm/ directories (user workspace)
+swarm/*/reports/
+swarm/*/checkpoints/
+swarm/*/simulation_report.md
+swarm/*/continuous_dispatch_plan.md
+swarm/*/iosm_state.md
+swarm/*/dependency_graph.mermaid
+
+# BUT keep examples/ intact (for demo purposes)
+!examples/demo-track/reports/
+!examples/demo-track/checkpoints/
+!examples/demo-track/simulation_report.md
+!examples/demo-track/continuous_dispatch_plan.md
+!examples/demo-track/iosm_state.md
+!examples/demo-track/dependency_graph.mermaid
