@@ -1,6 +1,6 @@
 ---
 name: swarm-iosm
-version: 1.1.1
+version: 2.1
 description: Orchestrate complex development with AUTOMATIC parallel subagent execution, continuous dispatch scheduling, dependency analysis, file conflict detection, and IOSM quality gates. Analyzes task dependencies, builds critical path, launches parallel background workers with lock management, monitors progress, auto-spawns from discoveries. Use for multi-file features, parallel implementation streams, automated task decomposition, brownfield refactoring, or when user mentions "parallel agents", "orchestrate", "swarm", "continuous dispatch", "automatic scheduling", "PRD", "quality gates", "decompose work", "Mixed/brownfield".
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, Task, AskUserQuestion, TodoWrite
@@ -112,8 +112,11 @@ Run a dry-run simulation of the implementation plan. (v1.3)
 4. Generates ASCII timeline and simulation report
 5. Estimates total parallel execution time vs serial
 
-**Arguments:**
-- `[track-id]`: Optional track-id (defaults to most recent)
+**Example usage:**
+```
+/swarm-iosm simulate
+/swarm-iosm simulate 2026-01-17-001
+```
 
 ### `/swarm-iosm resume [track-id]`
 Resume an interrupted implementation from the latest checkpoint. (v1.3)
@@ -129,12 +132,6 @@ Resume an interrupted implementation from the latest checkpoint. (v1.3)
 ```
 /swarm-iosm resume
 /swarm-iosm resume 2026-01-17-001
-```
-
-**Example usage:**
-```
-/swarm-iosm simulate
-/swarm-iosm simulate 2026-01-17-001
 ```
 
 ### `/swarm-iosm retry <task-id> [--foreground] [--reset-brief]`
@@ -249,7 +246,7 @@ Define limits in `plan.md` or metadata to prevent overload.
 
 ## ORCHESTRATOR RESPONSIBILITIES
 
-**CRITICAL:** The main agent (Claude) acts as **ORCHESTRATOR ONLY**. You coordinate subagents but DO NOT do implementation work yourself.
+**CRITICAL:** The main agent (Claude) acts as **ORCHESTRATOR ONLY**. You coordinate subagents but DO NOT do implementation work yourself.       
 
 ### MANDATORY RULES
 
@@ -329,23 +326,48 @@ Phase 5: Deployment Prep
 
 ### Главный принцип
 
-> **"Работай в режиме continuous scheduling: как только появляется READY задача без конфликтов touches и без needs_user_input — немедленно запускай её в background, даже если другие задачи ещё выполняются. После каждого батча собирай SpawnCandidates из отчётов и автоматически добавляй их в backlog. Продолжай цикл, пока не достигнуты заданные IOSM Gate targets."**
+> **"Работай в режиме continuous scheduling: как только появляется READY задача без конфликтов touches и без needs_user_input — немедленно запускай её в background, даже если другие задачи ещё выполняются. После каждого батча собирай SpawnCandidates из отчётов и автоматически добавляй их в backlog. Продолжай цикл, пока не достигнуты заданные IOSM Gate targets."**   
 
 ### Continuous Orchestration Loop
 
-3. LOOP:
-   a. Monitor running tasks (/bashes)
-   b. On task completion:
-      - Read SpawnCandidates from report
-      - **Update State:**
-        ```bash
-        python .claude/skills/swarm-iosm/scripts/orchestration_planner.py swarm/tracks/<id>/plan.md --update-task <TID> --status DONE
-        ```
-        (This automatically updates `iosm_state.md`, cost tracking, and metrics)
-      - Check if budget exhausted or Gates met
-      - Dispatch new ready tasks
-   c. If blocked on user в†’ ask questions
-   d. If error в†’ `/swarm-iosm retry`
+```
+LOOP (до достижения Gate targets):
+
+  1. CollectReady()
+     └─── Собрать задачи, у которых deps выполнены
+
+  2. Classify()
+     └─── Каждой задаче присвоить режим:
+        - background: safe, no user input needed
+        - foreground: needs user decision
+        - blocked_user: needs_user_input=true, не можем авто-решить
+        - blocked_conflict: touches пересекаются с running
+
+  3. ConflictCheck()
+     └─── Parallel launch ТОЛЬКО tasks без пересечения touches (для write)
+     └─── Read-only tasks ВСЕГДА можно параллелить
+
+  4. DispatchBatch()
+     └─── Запустить READY tasks ОДНИМ СООБЩЕНИЕМ (max 3-6 per batch)
+     └─── Приоритет: critical_path > high_severity_spawn > read-only_fillers
+     └─── Каждый batch получает batch_id для трекинга
+     └─── Не ждать "конца волны" — dispatch immediately
+
+  5. Monitor()
+     └─── Периодически читать outputs background tasks
+     └─── Собирать SpawnCandidates из отчётов
+
+  6. AutoSpawn()
+     └─── Если найдены SpawnCandidates → создать новые tasks
+     └─── Добавить в backlog и вернуться к шагу 1
+
+  7. GateCheck()
+     └─── Проверить условия Gate-I/M/O/S
+     └─── Если достигнуты → остановиться + gate-report
+     └─── Если нет → авто-spawn remediation tasks и продолжить
+
+END LOOP
+```
 
 ### Task States (внутренний трекинг)
 
@@ -362,7 +384,7 @@ Phase 5: Deployment Prep
 
 ### Touches Lock Manager
 
-Для безопасного параллелизма оркестратор должен отслеживать "занятые" файлы:
+Для безопасного параллелизма оркестратор должен отслеживать "занятые" файлы:  
 
 ```
 touches_lock: Set[path] = {}
@@ -388,12 +410,12 @@ touches_lock: Set[path] = {}
 
 ```
 Lock по ПАПКЕ (core/) конфликтует:
-  ├─ с любым lock внутри (core/a.py, core/b.py)
-  └─ с lock на саму папку (core/)
+  ├── с любым lock внутри (core/a.py, core/b.py)
+  └── с lock на саму папку (core/)
 
 Lock по ФАЙЛУ (core/a.py) конфликтует:
-  ├─ только с тем же файлом
-  └─ с lock на родительскую папку (core/)
+  ├── только с тем же файлом
+  └── с lock на родительскую папку (core/)
 ```
 
 **Нормализация путей:**
@@ -421,9 +443,9 @@ def conflicts(lock_a: str, lock_b: str) -> bool:
 **scratch_dir правило:**
 ```
 swarm/tracks/<track-id>/scratch/   ← read-only tasks пишут сюда
-  ├─ T00_analysis.json
-  ├─ T03_coverage.xml
-  └─ ...
+  ├── T00_analysis.json
+  ├── T03_coverage.xml
+  └── ...
 ```
 
 Эта папка НЕ требует lock и НЕ конфликтует ни с кем.
@@ -530,7 +552,7 @@ else:
 - max_total_iterations: 50
 ```
 
-**РџСЂР°РІРёР»Рѕ:** Р•СЃР»Рё `loops_without_progress >= 3` в†’ STOP, analyze why stuck
+**Правило:** Если `loops_without_progress >= 3` → STOP, analyze why stuck
 
 ### Model Selection & Cost (v1.2)
 
@@ -914,7 +936,7 @@ Use **foreground** (default) when:
 - Permission escalations expected
 - Results needed immediately for next step
 
-**IMPORTANT:** Background subagents cannot use AskUserQuestion (tool call will fail). Resolve all questions BEFORE launching background tasks.
+**IMPORTANT:** Background subagents cannot use AskUserQuestion (tool call will fail). Resolve all questions BEFORE launching background tasks.  
 
 ### Background Limitations (CRITICAL)
 
@@ -1304,7 +1326,28 @@ See additional documentation:
 
 ## Version
 
-Swarm Workflow (IOSM) v1.1.1 - 2026-01-17
+Swarm Workflow (IOSM) v2.1 - 2026-01-19
+
+**v2.1 Changes:**
+- Automated State Management (auto-generated `iosm_state.md`)
+- Status Sync CLI (`--update-task`)
+- Improved Report Conflict Detection
+
+**v2.0 Changes:**
+- Inter-Agent Communication (Shared Context)
+- Task Dependency Visualization (`--graph`)
+- Anti-Pattern Detection
+- Template Customization
+
+**v1.3 Changes:**
+- Simulation Mode (`/swarm-iosm simulate`) with ASCII Timeline
+- Live Monitoring (`/swarm-iosm watch`)
+- Checkpointing & Resume (`/swarm-iosm resume`)
+
+**v1.2 Changes:**
+- Concurrency Limits (Resource Budgets)
+- Cost Tracking & Model Selection (Haiku/Sonnet/Opus)
+- Intelligent Error Diagnosis & Retry (`/swarm-iosm retry`)
 
 **v1.1 Changes:**
 - Continuous Dispatch Loop (не ждём волну — запускаем сразу при READY)

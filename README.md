@@ -1,4 +1,8 @@
-# Swarm Workflow (IOSM) - Agent Skill
+# <img src="examples/logo.webp" width="48" height="48" align="center" alt="Swarm-IOSM Logo"> Swarm Workflow (IOSM) - Agent Skill
+
+[![Version](https://img.shields.io/badge/version-2.1-blue.svg)](https://github.com/rokoss21/swarm-iosm)
+[![Quality](https://img.shields.io/badge/IOSM-Ready-green.svg)](https://github.com/rokoss21/swarm-iosm)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/rokoss21/swarm-iosm)
 
 A comprehensive Claude Code Skill for orchestrating complex development tasks using PRD-driven planning, parallel subagent execution, and IOSM quality gates.
 
@@ -54,43 +58,43 @@ Swarm Workflow automates the full lifecycle of complex development tasks:
 
 ## Key Features
 
-### вњ… Structured Workflow
+### ✅ Structured Workflow
 - Repeatable process for any complexity level
 - Works for both greenfield (new) and brownfield (existing) projects
 - All work tracked in standardized artifacts
 
-### рџљЂ Parallel Execution & Concurrency (v1.2)
+### 🚀 Parallel Execution & Concurrency (v1.2)
 - **Continuous Dispatch:** Launches tasks as soon as dependencies are met
 - **Resource Limits:** Prevents OOM/Rate limits (Max 6 background tasks by default)
 - **Lock Manager:** Automatically prevents file access conflicts
 - **Speedup:** Achieves 2-5x acceleration vs sequential execution
 
-### рџ’° Cost Control & Model Optimization (v1.2)
+### 💰 Cost Control & Model Optimization (v1.2)
 - **Smart Model Selection:** Uses Haiku for read-only, Sonnet for code, Opus for security
 - **Budget Tracking:** Stops execution if cost exceeds limit (default $10)
 - **Cost Estimation:** Predicts track cost before execution
 
-### рџ›ЎпёЏ Reliability & Resilience (v1.3)
+### 🛡️ Reliability & Resilience (v1.3)
 - **Smart Retry:** Auto-retries transient failures (max 3 times)
 - **Checkpointing:** Saves state after every step; resume after crash via `/swarm-iosm resume`
 - **Error Diagnosis:** Translates cryptic errors into actionable fixes (e.g., "Run chmod +x")
 
-### рџ“€ Observability & Simulation (v1.3)
+### 📊 Observability & Simulation (v1.3)
 - **Simulation Mode:** Dry-run execution with `/swarm-iosm simulate`
 - **Live Dashboard:** Watch progress with `/swarm-iosm watch` (ASCII bars, Velocity, ETA)
 - **Visualization:** Generate Mermaid dependency graphs
 
-### рџ¤– Automated State Management (v2.1)
+### 🤖 Automated State Management (v2.1)
 - **Single Source of Truth:** `iosm_state.md` is now auto-generated from JSON checkpoints.
 - **Sync via CLI:** Use `--update-task <TID> --status DONE` to keep everything in sync.
 - **Accuracy:** Eliminates manual calculation errors in budget and progress tracking.
 
-### рџ§  Advanced Intelligence (v2.0)
+### 🧠 Advanced Intelligence (v2.0)
 - **Anti-Pattern Detection:** Warns about monolithic tasks or low parallelism
 - **Inter-Agent Communication:** Subagents share patterns via `shared_context.md`
 - **Template Customization:** Override templates per project
 
-### рџ“Љ Quality Enforcement
+### 📈 Quality Enforcement
 - IOSM quality gates (Improve, Optimize, Shrink, Modularize)
 - Automated scoring and acceptance criteria
 - Blocks low-quality code from production
@@ -195,6 +199,79 @@ Show progress summary for a track.
 - Available reports
 - Blockers and open questions
 - Overall progress percentage
+
+---
+
+### `/swarm-iosm watch [track-id]`
+Open a live monitoring dashboard for a track. (v1.3)
+
+**What it does:**
+1. Calculates real-time metrics (velocity, ETA, progress %)
+2. Renders an ASCII progress bar
+3. Shows status of all tasks in the track
+4. Refreshes data from reports and checkpoints
+
+**Example usage:**
+```
+/swarm-iosm watch
+```
+
+---
+
+### `/swarm-iosm simulate [track-id]`
+Run a dry-run simulation of the implementation plan. (v1.3)
+
+**What it does:**
+1. Loads implementation plan and resource constraints
+2. Simulates dispatch loop with virtual time
+3. Identifies bottlenecks and potential conflicts
+4. Generates ASCII timeline and simulation report
+5. Estimates total parallel execution time vs serial
+
+**Example usage:**
+```
+/swarm-iosm simulate
+```
+
+---
+
+### `/swarm-iosm resume [track-id]`
+Resume an interrupted implementation from the latest checkpoint. (v1.3)
+
+**What it does:**
+1. Loads latest checkpoint from `checkpoints/latest.json`
+2. Reconciles state by reading all report files in `reports/`
+3. Identifies completed vs pending tasks
+4. Recalculates the ready queue
+5. Shows a summary of progress and next steps
+
+**Example usage:**
+```
+/swarm-iosm resume
+```
+
+---
+
+### `/swarm-iosm retry <task-id> [--foreground] [--reset-brief]`
+Retry a failed task with optional mode changes. (v1.2)
+
+**What it does:**
+1. Reads error diagnosis from task report using parse_errors.py
+2. Shows error diagnosis to user with suggested fixes
+3. Asks user to choose: apply fix, manual fix, or skip
+4. Regenerates subagent brief with error context
+5. Relaunches task using Task tool
+6. Tracks retry count (max 3 per task)
+
+**Arguments:**
+- `<task-id>`: Task to retry (e.g., T04)
+- `--foreground`: Force foreground execution (for interactive debugging)
+- `--reset-brief`: Regenerate brief from scratch (vs. reuse existing)
+
+**Retry Workflow:**
+1. Identify errors via `/swarm-iosm status`
+2. Apply fix (suggested in dashboard)
+3. Retry via `/swarm-iosm retry TID`
 
 ---
 
@@ -396,107 +473,15 @@ Use `/bashes` to check on background subagents.
 ### Custom Subagent Roles
 Add your own roles by editing `SKILL.md` section "Subagent Taxonomy".
 
-Example:
-```markdown
-**DataEngineer** (data pipelines):
-- Tools: Read, Bash (SQL), Write
-- Output: ETL scripts, data validation
-- When: Data processing features
-```
-
 ### Custom Templates
 Copy templates and modify for your needs:
 
 ```bash
 cp templates/prd.md templates/prd_custom.md
-# Edit prd_custom.md with your sections
 ```
 
-Reference in SKILL.md:
-```markdown
-Generate PRD using [templates/prd_custom.md](templates/prd_custom.md)
-```
-
-### Integration with Conductor
-This Skill is compatible with Conductor CLI patterns:
-- `swarm/` mirrors `conductor/` structure
-- `tracks/` similar to Conductor tracks
-- Same spec/plan/metadata.json pattern
-
-## Troubleshooting
-
-### Skill not activating
-**Symptom:** Claude doesn't use Swarm Skill when expected
-
-**Fix:**
-1. Check description in SKILL.md includes trigger words
-2. Try explicit invocation: `/swarm-iosm new-track "..."`
-3. Restart Claude Code
-
----
-
-### Background subagent fails
-**Symptom:** Background task fails with permission error
-
-**Fix:**
-1. Check `/bashes` for task status
-2. Resume in foreground: find task ID, use Task tool with resume
-3. Pre-approve permissions before launching background tasks
-
----
-
-### Reports incomplete
-**Symptom:** Subagent report missing sections
-
-**Fix:**
-1. Subagent brief must explicitly require report template
-2. Include report template link in brief
-3. Validate reports with `scripts/summarize_reports.py`
-
----
-
-### File conflicts during integration
-**Symptom:** Multiple subagents edited same file
-
-**Fix:**
-1. Review plan to minimize shared file edits
-2. Use sequential tasks for shared files
-3. Manual merge in integration phase
-
----
-
-### IOSM gates failing
-**Symptom:** IOSM-Index < 0.80
-
-**Fix:**
-1. Review gate criteria in `templates/iosm_gates.md`
-2. Identify failing criteria
-3. Create follow-up tasks to address issues
-4. Re-run integration after fixes
-
-## Scripts
-
-### validate_plan.py
-Validate plan structure and dependencies.
-
-```bash
-python .claude/skills/swarm-iosm/scripts/validate_plan.py swarm/tracks/2026-01-17-001/plan.md
-
-# With dependency graph
-python .claude/skills/swarm-iosm/scripts/validate_plan.py swarm/tracks/2026-01-17-001/plan.md --graph
-```
-
----
-
-### summarize_reports.py
-Generate summary of all subagent reports.
-
-```bash
-python .claude/skills/swarm-iosm/scripts/summarize_reports.py swarm/tracks/2026-01-17-001
-
-# JSON output
-python .claude/skills/swarm-iosm/scripts/summarize_reports.py swarm/tracks/2026-01-17-001 --json
-```
+### Inter-Agent Communication (v2.0)
+Subagents share knowledge via `shared_context.md`. Orchestrator merges updates after task completion.
 
 ## Version History
 
@@ -539,14 +524,6 @@ python .claude/skills/swarm-iosm/scripts/summarize_reports.py swarm/tracks/2026-
 ## License
 
 This Skill is part of the AstroVisor project. Use freely in your projects.
-
-## Contributing
-
-Improvements welcome! Key areas:
-- Additional subagent roles
-- Better IOSM automation
-- Integration with CI/CD
-- Custom templates for different domains
 
 ---
 
