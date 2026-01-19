@@ -37,7 +37,11 @@ It implements the [**IOSM methodology**](https://github.com/rokoss21/IOSM) (Impr
 - 📋 **PRD-Driven Planning** — Structured requirements → decomposition → execution
 - ✅ **IOSM Quality Gates** — Automated code quality, performance, and modularity checks
 - 🔄 **Auto-Spawn Protocol** — Dynamic task discovery and creation during execution
-- 📊 **Cost Tracking** — Real-time API cost monitoring with budget controls
+- 📊 **Cost Tracking** — Budget guardrails with usage monitoring
+
+> **Core Model:** `Touches → Locks → Gates → Done`
+>
+> A correctness model for parallel agent work: declare what files you touch, acquire locks to prevent conflicts, pass quality gates, ship.
 
 ### Why Swarm-IOSM?
 
@@ -48,10 +52,19 @@ Traditional development workflows struggle with:
 - **Manual coordination** — Developers spend time orchestrating instead of building
 
 Swarm-IOSM solves these by:
-- **Parallelizing** independent work streams (commonly 3–8x faster than sequential)
+- **Parallelizing** independent work streams (commonly 3–8x faster than sequential, depends on task independence)
 - **Enforcing** IOSM quality gates before merge
 - **Automating** task decomposition and subagent coordination
 - **Tracking** all decisions and artifacts for full traceability
+
+### What Swarm-IOSM is NOT
+
+To set clear expectations:
+
+- ❌ **Not a general-purpose workflow engine** — Designed specifically for Claude Code agent orchestration
+- ❌ **Not a replacement for CI/CD** — Complements your pipeline, doesn't replace Jenkins/GitHub Actions
+- ❌ **Not a code generator "autopilot"** — Requires human oversight and decision-making
+- ❌ **Not safe to run unattended on production repos** — Always review changes before merge
 
 ---
 
@@ -89,7 +102,7 @@ git clone https://github.com/rokoss21/swarm-iosm.git .claude/skills/swarm-iosm
 | **File Lock Management** | Hierarchical conflict detection (file/folder) | Safe parallel writes, prevents merge conflicts |
 | **Auto-Spawn from Discoveries** | Subagents report new work → orchestrator schedules | Self-organizing workflow adaptation |
 | **Intelligent Error Recovery** | Pattern-based diagnosis with suggested fixes | Auto-diagnosis with 3 retry limit |
-| **Cost & Budget Control** | Real-time token tracking, $10 default limit | Predictable API costs |
+| **Cost & Budget Control** | Token usage tracking with budget guardrails | Predictable API costs (default: $10 limit) |
 | **Checkpoint & Resume** | Crash recovery from last known state | Fault-tolerant long-running tasks |
 
 ### Feature Status
@@ -202,59 +215,19 @@ git clone https://github.com/rokoss21/swarm-iosm.git .claude/skills/swarm-iosm
 
 ## 🚀 Quick Start
 
-### Installation
+See the [60-Second Demo](#-60-second-demo) above for immediate hands-on, or follow the complete guide:
 
-**Option 1: Project-Level** (Recommended)
+**📖 Full Tutorial:** [QUICKSTART.md](QUICKSTART.md)
+
+**Key Commands:**
 ```bash
-git clone https://github.com/rokoss21/swarm-iosm.git .claude/skills/swarm-iosm
+/swarm-iosm setup              # Initialize project
+/swarm-iosm new-track "..."    # Create feature track
+/swarm-iosm implement          # Execute plan
+/swarm-iosm integrate <id>     # Merge & run quality gates
 ```
 
-**Option 2: User-Level** (All Projects)
-```bash
-git clone https://github.com/rokoss21/swarm-iosm.git ~/.claude/skills/swarm-iosm
-```
-
-**Verify Installation:**
-```bash
-# In Claude Code
-/swarm-iosm
-```
-
-### 5-Minute Tutorial
-
-#### 1. Initialize Project Context
-```
-/swarm-iosm setup
-```
-Creates `swarm/` directory with project metadata.
-
-#### 2. Create a Track
-```
-/swarm-iosm new-track "Add JWT authentication to API"
-```
-Claude will:
-- Ask requirements questions (mode, priorities, constraints)
-- Generate PRD (`swarm/tracks/<id>/PRD.md`)
-- Decompose into tasks (`plan.md`)
-- Assign subagent roles
-
-#### 3. Validate Plan
-```bash
-python .claude/skills/swarm-iosm/scripts/orchestration_planner.py \
-  swarm/tracks/<track-id>/plan.md --validate
-```
-
-#### 4. Execute
-```
-/swarm-iosm implement
-```
-Orchestrator launches parallel subagents, monitors progress, auto-spawns fixes.
-
-#### 5. Integrate & Gate
-```
-/swarm-iosm integrate <track-id>
-```
-Merges work, runs IOSM quality gates, generates final reports.
+**Need help?** See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues.
 
 ---
 
