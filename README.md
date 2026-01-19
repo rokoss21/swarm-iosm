@@ -48,10 +48,30 @@ Traditional development workflows struggle with:
 - **Manual coordination** — Developers spend time orchestrating instead of building
 
 Swarm-IOSM solves these by:
-- **Parallelizing** independent work streams (up to 8x faster)
+- **Parallelizing** independent work streams (commonly 3–8x faster than sequential)
 - **Enforcing** IOSM quality gates before merge
 - **Automating** task decomposition and subagent coordination
 - **Tracking** all decisions and artifacts for full traceability
+
+---
+
+## ⚡ 60-Second Demo
+
+```bash
+# Install
+git clone https://github.com/rokoss21/swarm-iosm.git .claude/skills/swarm-iosm
+
+# In Claude Code
+/swarm-iosm setup
+/swarm-iosm new-track "Add JWT authentication"
+```
+
+**What you get:**
+- `swarm/tracks/<id>/PRD.md` — Requirements document
+- `swarm/tracks/<id>/plan.md` — Task breakdown with dependencies
+- `swarm/tracks/<id>/reports/` — Subagent execution reports (after `/swarm-iosm implement`)
+
+**See full example:** [`examples/demo-track/`](examples/demo-track/)
 
 ---
 
@@ -62,22 +82,27 @@ Swarm-IOSM solves these by:
 | Feature | Description | Benefits |
 |---------|-------------|----------|
 | **Continuous Dispatch Loop** | Tasks launch immediately when dependencies are met | No artificial wave barriers, maximum parallelism |
-| **Parallel Subagent Execution** | Up to 8 simultaneous background/foreground agents | 3-8x faster than sequential execution |
-| **IOSM Quality Gates** | Automated checks for code quality, performance, complexity | Production-ready code guaranteed |
-| **File Lock Management** | Hierarchical conflict detection (file/folder) | Safe parallel writes, no merge conflicts |
+| **Parallel Subagent Execution** | Up to 8 simultaneous background/foreground agents | Often 3-8x faster than sequential execution |
+| **IOSM Quality Gates** | Automated checks for code quality, performance, complexity | Quality-gated before merge |
+| **File Lock Management** | Hierarchical conflict detection (file/folder) | Safe parallel writes, prevents merge conflicts |
 | **Auto-Spawn from Discoveries** | Subagents report new work → orchestrator schedules | Self-organizing workflow adaptation |
-| **Intelligent Error Recovery** | Pattern-based diagnosis with suggested fixes | 3 retry limit with mode switching |
+| **Intelligent Error Recovery** | Pattern-based diagnosis with suggested fixes | Auto-diagnosis with 3 retry limit |
 | **Cost & Budget Control** | Real-time token tracking, $10 default limit | Predictable API costs |
 | **Checkpoint & Resume** | Crash recovery from last known state | Fault-tolerant long-running tasks |
 
-### Advanced Features (v2.0+)
+### Feature Status
 
-- **Inter-Agent Communication** — Shared context updates (`shared_context.md`)
-- **Task Dependency Visualization** — Mermaid diagram generation (`--graph`)
-- **Anti-Pattern Detection** — Warns on monolithic tasks, low parallelism
-- **Template Customization** — Project-specific template overrides
-- **Simulation Mode** — Dry-run with ASCII timeline before execution
-- **Live Monitoring** — Real-time progress dashboard (`/swarm-iosm watch`)
+| Feature | Status | Command/Location |
+|---------|--------|------------------|
+| ✅ **Inter-Agent Communication** | Available in v2.0+ | `shared_context.md` auto-updated |
+| ✅ **Task Dependency Visualization** | Available in v2.0+ | `--graph` flag in orchestration planner |
+| ✅ **Anti-Pattern Detection** | Available in v2.0+ | Auto-warns during planning |
+| ✅ **Template Customization** | Available in v2.0+ | Override in `swarm/templates/` |
+| ✅ **Simulation Mode** | Available in v1.3+ | `/swarm-iosm simulate` |
+| ✅ **Checkpoint & Resume** | Available in v1.3+ | `/swarm-iosm resume` |
+| 🧪 **Live Monitoring** | Experimental | `/swarm-iosm watch` (basic implementation) |
+| 🗺️ **IDE Integration** | Roadmap | VS Code extension planned |
+| 🗺️ **CI/CD Templates** | Roadmap | GitHub Actions / GitLab CI examples |
 
 ---
 
@@ -292,10 +317,10 @@ Located in `scripts/`:
 ```
 
 **Results:**
-- ⚡ **3x faster** than sequential work
+- ⚡ **~3x faster** (4-6h parallel vs 12-15h sequential)
 - ✅ **100% test coverage** (Gate-O enforcement)
-- 📉 **Zero technical debt** (Gate-I: clarity + no duplication)
-- 🔄 **Full rollback plan** generated
+- 📉 **Minimal technical debt** (Gate-I: 0.92 clarity score)
+- 🔄 **Full rollback plan** auto-generated
 
 ---
 
@@ -351,10 +376,10 @@ Located in `scripts/`:
 ```
 
 **Results:**
-- 📈 **Massive parallelism** — 6 modules updated simultaneously
-- 💰 **Cost control** — Stayed within budget
+- 📈 **High parallelism** — 6 modules updated simultaneously
+- 💰 **Budget control** — $6.50 spent (within $10 limit)
 - 🔍 **Auto-discovery** — 3 critical tasks auto-spawned from findings
-- ⏱️ **Time savings** — 18h parallel vs 60h+ sequential
+- ⏱️ **Time savings** — ~18h parallel vs 60h+ sequential (example track)
 
 ---
 
