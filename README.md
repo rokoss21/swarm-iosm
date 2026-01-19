@@ -34,12 +34,12 @@ Swarm-IOSM enforces these principles automatically via **Quality Gates** and **O
 - **Continuous Dispatch Loop:** Tasks are launched continuously as dependencies are met, maximizing parallelism.
 - **Smart Model Selection:** Automatically routes tasks to the best model (Haiku for reads, Sonnet for code, Opus for architecture) to optimize cost/performance.
 
-### 🛡️ Resilience & Reliability
+### 🛡️ Resilience & Reliability (v1.3)
 - **Smart Retry System:** Auto-detects transient failures (network, timeouts) and retries up to 3 times.
 - **Error Diagnosis:** Translates cryptic Python/Shell errors into actionable fixes (e.g., "Permission Denied" → "Run chmod").
 - **Checkpointing:** State is saved to JSON after every event. Resume execution after a crash with a single command.
 
-### ⚡ Parallel Execution
+### ⚡ Parallel Execution (v1.2)
 - **Resource Budgets:** Prevents API rate limits and OOM errors by capping background tasks (default: 6 BG / 2 FG).
 - **Lock Manager:** Automatically prevents file conflicts by locking `touches` paths during execution.
 - **Speedup:** Achieves 2-5x acceleration compared to sequential execution.
@@ -48,6 +48,11 @@ Swarm-IOSM enforces these principles automatically via **Quality Gates** and **O
 - **Simulation Mode:** Dry-run your plan before spending tokens. See a Gantt chart of predicted execution.
 - **Live Dashboard:** Watch progress in real-time with ASCII progress bars, velocity tracking, and ETA.
 - **Dependency Visualization:** Generate Mermaid graphs to visualize task relationships.
+
+### 🤖 Advanced Intelligence (v2.0)
+- **Anti-Pattern Detection:** Warns about monolithic tasks or low parallelism.
+- **Inter-Agent Communication:** Subagents share patterns via `shared_context.md`.
+- **Template Customization:** Override templates per project.
 
 ---
 
@@ -131,6 +136,9 @@ Show progress summary, blockers, and completion status.
 ### `/swarm-iosm integrate <track-id>`
 Collect subagent reports, resolve conflicts, and run IOSM quality gates.
 
+### `/swarm-iosm revert-plan <track-id>`
+Generate a step-by-step rollback guide (does NOT execute git revert automatically).
+
 ---
 
 ## 🤖 Subagent Roles
@@ -153,25 +161,93 @@ The Skill defines standard subagent roles optimized for specific tasks:
 
 Every track is evaluated against strict criteria before integration:
 
-### Gate-I: Improve (Code Quality)
-- ✅ Semantic clarity ≥ 0.95 (clear naming)
-- ✅ Code duplication ≤ 5%
-- ✅ Invariants documented (100% public APIs)
+| Gate | Focus | Criteria |
+|------|-------|----------|
+| **Gate-I** | **Improve** | Semantic clarity ≥ 0.95, No duplication |
+| **Gate-O** | **Optimize** | P95 Latency defined, Tests passing |
+| **Gate-S** | **Shrink** | API surface minimized, Deps reduced |
+| **Gate-M** | **Modularize** | Clean contracts, No circular deps |
 
-### Gate-O: Optimize (Performance)
-- ✅ P50/P95/P99 latency measured
-- ✅ Error budget defined
-- ✅ Chaos tests passing
+**Production threshold:** IOSM-Index ≥ 0.80
 
-### Gate-S: Shrink (Minimal Surface)
-- ✅ API surface reduced ≥ 20% (or justified)
-- ✅ Dependency count stable/reduced
-- ✅ Onboarding time ≤ 15 min
+---
 
-### Gate-M: Modularize (Clean Boundaries)
-- ✅ Module contracts 100% defined
-- ✅ Change surface ≤ 20% (localized)
-- ✅ No circular dependencies
+## 📚 Real-World Examples
+
+### Example 1: Greenfield Feature (New Email System)
+```
+User: I need to add email notifications to the app
+
+Claude (using Swarm Skill):
+1. /swarm-iosm new-track "Add email notification system"
+2. Gathers requirements (SMTP? SendGrid? Templates?)
+3. Generates PRD with acceptance criteria
+4. Creates plan with tasks:
+   - T01: Design email templates (DocsWriter)
+   - T02: Implement email service (Implementer-A)
+   - T03: Add API endpoints (Implementer-B)
+   - T04: Write tests (TestRunner)
+5. Launches T01, T02, T03 in parallel (background)
+6. Collects reports and integrates
+7. Runs IOSM gates, creates integration report
+```
+
+### Example 2: Brownfield Refactor (Payment Module)
+```
+User: Refactor the payment processing module
+
+Claude (using Swarm Skill):
+1. /swarm-iosm setup (if first time)
+2. /swarm-iosm new-track "Refactor payment processing"
+3. Suggests Plan mode (read-only exploration)
+4. Launches Explorer to map current payment module
+5. Architect creates refactoring plan (ADR)
+6. Implementer refactors incrementally
+7. TestRunner ensures no regressions
+8. Integration report includes rollback guide
+```
+
+### Example 3: Complex Architecture (Multi-Tenant)
+```
+User: Implement multi-tenant architecture
+
+Claude (using Swarm Skill):
+1. /swarm-iosm new-track "Multi-tenant architecture"
+2. Creates plan with 15 tasks across 4 phases
+3. Phase 1 (Design):
+   - T01: Architect designs tenant isolation
+   - T02: Architect designs data model
+4. Phase 2 (Implementation - parallel):
+   - T04: Implementer-A (tenant middleware)
+   - T05: Implementer-B (tenant models)
+   - T06: Implementer-C (tenant API)
+   - All run in background simultaneously
+5. Phase 3 (Verification):
+   - T08: TestRunner (integration tests)
+   - T09: SecurityAuditor (tenant isolation audit)
+6. Phase 4 (Integration):
+   - Merge all work, resolve conflicts
+   - IOSM gates, deployment plan
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Background task fails silently?
+*   **Cause:** Often due to permission errors or tools requiring user input (MCP) running in background.
+*   **Fix:** Check `/bashes` for status. Use `/swarm-iosm retry <TID> --foreground` to debug interactively.
+
+### "Loops without progress"?
+*   **Cause:** Circular dependencies or all tasks blocked on user input.
+*   **Fix:** Check `iosm_state.md` for blocking questions or circular logic.
+
+### Permission Denied errors?
+*   **Diagnosis:** The system now auto-diagnoses this (v1.2).
+*   **Fix:** Use the suggested fix (e.g., `chmod`) and retry.
+
+### Script not found?
+*   **Fix:** Ensure you are running from the project root and the `.claude/skills` directory is correctly placed.
 
 ---
 
@@ -192,26 +268,6 @@ swarm/                          # Project workflow data (auto-created)
       checkpoints/             # JSON State snapshots
       integration_report.md    # Final results
 ```
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**Background task fails silently?**
-- Check `/bashes` for status.
-- Use `/swarm-iosm retry <TID> --foreground` to debug interactively.
-
-**"Loops without progress"?**
-- Check `iosm_state.md` for blocking questions.
-- Ensure dependencies in `plan.md` don't form a cycle.
-
-**Permission Denied errors?**
-- The system now auto-diagnoses this. Use the suggested fix (e.g., `chmod`) and retry.
-
-**Script not found?**
-- Ensure you are running from the project root.
 
 ---
 
