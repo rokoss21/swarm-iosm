@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../examples/logo.webp" alt="Swarm-IOSM" width="400">
+  <img src="examples/logo.webp" alt="Swarm-IOSM" width="400">
 </p>
 
 <h1 align="center">Swarm-IOSM</h1>
