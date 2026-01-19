@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+reports/
+checkpoints/
+simulation_report.md
+continuous_dispatch_plan.md
+iosm_state.md
+dependency_graph.mermaid
